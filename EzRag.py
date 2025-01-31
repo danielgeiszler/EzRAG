@@ -5,7 +5,7 @@ import nltk
 import gradio as gr
 from openai import OpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, UnstructuredWordDocumentLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
@@ -17,6 +17,7 @@ from pathlib import Path
 load_dotenv()
 nltk.download('punkt')
 nltk.download('punkt_tab')
+nltk.download('averaged_perceptron_tagger_eng')
 
 
 class DeepSeekRunnable(Runnable):
@@ -49,7 +50,7 @@ def safe_load_documents(directory: str):
     errors = []
 
     # Gather all .txt and .pdf files, excluding hidden files/directories
-    supported_extensions = ['.txt', '.pdf']
+    supported_extensions = ['.txt', '.pdf', '.docx']
     files = [
         f for f in Path(directory).rglob("*")
         if f.suffix.lower() in supported_extensions and not any(part.startswith(".") for part in f.parts)
@@ -62,6 +63,8 @@ def safe_load_documents(directory: str):
                 loader = TextLoader(str(file), autodetect_encoding=True)
             elif file.suffix.lower() == ".pdf":
                 loader = PyPDFLoader(str(file))
+            elif file.suffix.lower() == ".docx":
+                loader = UnstructuredWordDocumentLoader(str(file))
             else:
                 # This should not happen as we've filtered supported extensions
                 raise ValueError("Unsupported file extension")
