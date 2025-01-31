@@ -84,7 +84,7 @@ def safe_load_documents(directory: str):
 def initialize_rag():
     try:
         # 1. Load and split documents
-        data_dir = "./data"
+        data_dir = Path("./data").resolve()
         documents = safe_load_documents(data_dir)
 
         text_splitter = RecursiveCharacterTextSplitter(

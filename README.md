@@ -14,13 +14,9 @@ A lightweight script for running Retrieval Augmented Generation using DeepSeek. 
 6. If the model produces incorrect information about Chinese dialects, it worked!
 
 ## Adding your own data
-Currenly, only .txt files are supported. Adding your .txt files to the ```data``` directory is sufficient for them to be included in the system.
-
-## Known issues
-* Some of the LangChain document loading libraries are known to hang in certain environments. So far, I have encountered this issue in GitBash and Jupyter Notebooks. Running in Powershell works fine.
+Currenly, only .txt and .pdf files are supported. Adding your files to the ```data``` directory is sufficient for them to be included in the system.
 
 ## Coming soon
 * Support for more document types
 * Support for more models
-* Bug fixes for other environments
 * Python 3.13 support
