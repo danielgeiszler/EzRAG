@@ -12,6 +12,7 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables import Runnable
 from pathlib import Path
+import argparse
 
 # Initialize environment
 load_dotenv()
@@ -23,7 +24,7 @@ nltk.download('averaged_perceptron_tagger_eng')
 class DeepSeekRunnable(Runnable):
     def __init__(self):
         self.client = OpenAI(
-            api_key=os.getenv("DEEPSEEK_API_KEY"),
+            api_key=os.getenv("API_KEY"),
             base_url="https://api.deepseek.com/v1",
         )
 
@@ -44,6 +45,43 @@ class DeepSeekRunnable(Runnable):
         except Exception as e:
             return f"Error: {str(e)}"
 
+class OpenAIRunnable(Runnable):
+    def __init__(self, temperature = 0.3):
+        self.temperature = temperature
+        self.client = OpenAI(
+            api_key=os.getenv("API_KEY"),  # Different environment variable
+            # base_url is not needed as it defaults to OpenAI's official endpoint
+        )
+
+    def invoke(self, input: dict, config: dict = None, **kwargs):
+        try:
+            # Maintain the same input handling as DeepSeek implementation
+            query = input.get("query", "") if isinstance(input, dict) else str(input)
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini-2024-07-18",
+                messages=[{"role": "user", "content": query}],
+                temperature=self.temperature,
+                **kwargs
+            )
+            return response.choices[0].message.content
+
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Run EzRAG with configurable service.",
+        epilog="Example: python fragrag.py --service openai"
+    )
+    parser.add_argument(
+        "--service",
+        choices=["openai", "deepseek"],
+        default="openai",
+        help="The service to use: 'openai' or 'deepseek' (default: openai)."
+    )
+    return vars(parser.parse_args())
 
 def safe_load_documents(directory: str):
     documents = []
@@ -84,7 +122,7 @@ def safe_load_documents(directory: str):
     return documents
 
 
-def initialize_rag():
+def initialize_rag(llm):
     try:
         # 1. Load and split documents
         data_dir = Path("./data").resolve()
@@ -116,7 +154,7 @@ def initialize_rag():
         )
 
         return RetrievalQA.from_chain_type(
-            llm=DeepSeekRunnable(),
+            llm=llm,
             chain_type="stuff",
             retriever=retriever,
             chain_type_kwargs={"prompt": prompt},
@@ -139,12 +177,24 @@ def ask(question):
 
 
 if __name__ == "__main__":
+    # Get args
+    config = parse_args()
+    service = config.get("service")
+
+    # Choose the runnable based on service
+    if service.lower() == "openai":
+        llm = OpenAIRunnable()
+    elif service.lower() == "deepseek":
+        llm = DeepSeekRunnable()
+    else:
+        raise ValueError(f"Unsupported service: {service}")
+
     # Initialize system
-    rag_chain = initialize_rag()
+    rag_chain = initialize_rag(llm)
 
     gr.Interface(
         fn=ask,
         inputs=gr.Textbox(label="Question"),
         outputs=gr.Textbox(label="Answer"),
-        title="DeepSeek Document Assistant"
+        title="Document Assistant"
     ).launch()
