@@ -1,5 +1,5 @@
 # EzRAG
-A lightweight script for running Retrieval Augmented Generation using DeepSeek. If you'd like to see what's going on under the hood, you can check out [my blog post](https://danny.bio/posts/20250125-retrieval-augmented-generation/).
+A lightweight program for testing Retrieval Augmented Generation using DeepSeek. If you'd like to see what's going on under the hood, you can check out [my blog post](https://danny.bio/posts/20250125-retrieval-augmented-generation/).
 
 ## Requirements
 1. Python 3.12.X, Python 3.13 currently has versioning conflicts
